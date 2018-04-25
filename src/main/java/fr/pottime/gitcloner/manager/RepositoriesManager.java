@@ -68,7 +68,7 @@ public class RepositoriesManager {
             conn.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(20));
             conn.setReadTimeout((int) TimeUnit.SECONDS.toMillis(30));
             conn.setDoOutput(true);
-            conn.setRequestProperty("User-Agent", "GitClonerMain/" + GitClonerMain.VERSION);
+            conn.setRequestProperty("User-Agent", "GitCloner/" + GitClonerMain.VERSION);
         } catch (IOException e) {
             GitClonerMain.logger.severe("** OPEN AN ISSUES ON GTIHUB **");
             GitClonerMain.logger.severe("Can't open the connection for the url " + url);
