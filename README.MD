@@ -4,3 +4,6 @@ organisation.
 
 ## Usage
 Read USAGE.MD
+
+## Dependencies
+Git-Cloner have some dependencies like projectlombok v1.16.20 and gson v2.8.2
