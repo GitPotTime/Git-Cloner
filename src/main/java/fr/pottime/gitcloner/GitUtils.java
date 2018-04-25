@@ -41,9 +41,9 @@ public class GitUtils {
             return sb.toString();
         } catch (IOException e) {
             if (line == null) return sb.toString();
-            GitCloner.logger.severe("** OPEN AN ISSUES ON GITHUB **");
-            GitCloner.logger.severe("An error occurred while reading the content of an file or an website.");
-            GitCloner.logger.severe("Errors are here:");
+            GitClonerMain.logger.severe("** OPEN AN ISSUES ON GITHUB **");
+            GitClonerMain.logger.severe("An error occurred while reading the content of an file or an website.");
+            GitClonerMain.logger.severe("Errors are here:");
             e.printStackTrace();
             Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
             return sb.toString();
@@ -62,9 +62,9 @@ public class GitUtils {
         try {
             return (JsonArray) parser.parse(str);
         } catch (JsonSyntaxException e) {
-            GitCloner.logger.severe("** OPEN AN ISSUES ON GITHUB **");
-            GitCloner.logger.severe("Can't parse the string " + str);
-            GitCloner.logger.severe("Errors are here:");
+            GitClonerMain.logger.severe("** OPEN AN ISSUES ON GITHUB **");
+            GitClonerMain.logger.severe("Can't parse the string " + str);
+            GitClonerMain.logger.severe("Errors are here:");
             e.printStackTrace();
             Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
             return new JsonArray();
@@ -83,9 +83,9 @@ public class GitUtils {
         try {
             return new URL(url);
         } catch (MalformedURLException e) {
-            GitCloner.logger.severe("** OPEN AN ISSUES ON GITHUB **");
-            GitCloner.logger.severe("The url " + url + " is malformed.");
-            GitCloner.logger.severe("Please open an issues with these errors:");
+            GitClonerMain.logger.severe("** OPEN AN ISSUES ON GITHUB **");
+            GitClonerMain.logger.severe("The url " + url + " is malformed.");
+            GitClonerMain.logger.severe("Please open an issues with these errors:");
             e.printStackTrace();
             Runtime.getRuntime().exit(ExitStatus.MALFORMED_URL.getStatus());
             return null;
@@ -118,15 +118,15 @@ public class GitUtils {
             conn.setConnectTimeout((int) TimeUnit.MILLISECONDS.toSeconds(20000));
             conn.setReadTimeout((int) TimeUnit.MILLISECONDS.toSeconds(30000));
             conn.setDoOutput(true);
-            conn.addRequestProperty("User-Agent", "GitCloner-" + GitCloner.VERSION);
+            conn.addRequestProperty("User-Agent", "GitCloner-" + GitClonerMain.VERSION);
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String content = GitUtils.readContent(reader);
             return GitUtils.parseJsonString(content).size() > 0;
         } catch (IOException e) {
-            GitCloner.logger.severe("** READ THE MESSAGE FOR SEE IF YOU NEED TO OPEN AN ISSUES **");
-            GitCloner.logger.severe("Try to connect to the url " + url.getHost() + " and if you can't. It's because the website is closed else");
-            GitCloner.logger.severe("open an issues on github with they errors:");
+            GitClonerMain.logger.severe("** READ THE MESSAGE FOR SEE IF YOU NEED TO OPEN AN ISSUES **");
+            GitClonerMain.logger.severe("Try to connect to the url " + url.getHost() + " and if you can't. It's because the website is closed else");
+            GitClonerMain.logger.severe("open an issues on github with they errors:");
             e.printStackTrace();
             Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
             return false;
@@ -151,15 +151,15 @@ public class GitUtils {
      * @param printer The printer
      */
     public static void listRepositories(Account account, Logger printer) {
-        GitCloner.logger.info("The user " + account.getUsername() + " have " + account.getRepositories().size() + " repositories");
-        GitCloner.logger.info("They repositories are here:");
+        GitClonerMain.logger.info("The user " + account.getUsername() + " have " + account.getRepositories().size() + " repositories");
+        GitClonerMain.logger.info("They repositories are here:");
         for (Repository repo : account.getRepositories()) {
             printer.fine(repo.getName() + ":");
             printer.fine("httpsUrl= " + repo.getHttpsUrl());
             printer.fine("sshUrl= " + repo.getSshUrl());
             printer.fine("public: " + (repo.isPublicRepository() ? "Yes" : "No"));
         }
-        GitCloner.logger.info("All repositories by " + account.getUsername() + " are listed!");
+        GitClonerMain.logger.info("All repositories by " + account.getUsername() + " are listed!");
     }
 
     /**
