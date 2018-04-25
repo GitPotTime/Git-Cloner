@@ -13,8 +13,10 @@ import java.io.InputStreamReader;
 import java.util.logging.Logger;
 
 /**
+ * Clone all repositories from an Github user or an Github organisation!
+ *
  * @author Antoine
- * @version 1.0
+ * @version 1.1
  */
 public class GitCloner {
 
@@ -24,14 +26,14 @@ public class GitCloner {
     public static final String VERSION = "1.0.0";
 
     /**
-     * The logger
+     * The logger used to print information and errors.
      */
     public static final Logger logger;
 
     /**
      * The type of account choose by the user.
      */
-    public static AccountType accountType;
+    private static AccountType accountType;
 
     static {
         logger = Logger.getLogger(GitCloner.class.getName());
@@ -73,6 +75,7 @@ public class GitCloner {
             account.addRepository(repo);
         }
 
+        // Clone repositories
         GitCloner.logger.info("Cloning " + account.getUsername() + " repositories..");
         for (Repository repo : account.getRepositories()) {
             String command = "git clone " + repo.getHttpsUrl();
