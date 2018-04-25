@@ -26,9 +26,14 @@ public enum ExitStatus {
     MALFORMED_URL(3),
 
     /**
+     * The account doesn't exists
+     */
+    ACCOUNT_DONT_EXISTS(4),
+
+    /**
      * An error occurred..
      */
-    ERROR(4);
+    ERROR(5);
 
 
     /**
@@ -41,7 +46,7 @@ public enum ExitStatus {
     }
 
     /**
-     * Exit GitCloner with the status {@link #status}
+     * Exit GitClonerMain with the status {@link #status}
      * using {@link Runtime#exit(int)}
      */
     public void exit() {
@@ -58,9 +63,9 @@ public enum ExitStatus {
     }
 
     /**
-     * Check if GitCloner exit with an error
+     * Check if GitClonerMain exit with an error
      *
-     * @return {@code true} if GitCloner
+     * @return {@code true} if GitClonerMain
      */
     public boolean isError() {
         return status != 0;

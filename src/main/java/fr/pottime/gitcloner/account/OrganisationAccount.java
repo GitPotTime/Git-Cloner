@@ -15,7 +15,6 @@ import java.util.Collection;
  * @author Antoine
  * @version 1.1
  */
-
 @AllArgsConstructor
 @Getter
 public class OrganisationAccount implements Account {

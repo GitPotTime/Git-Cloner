@@ -10,6 +10,9 @@ import java.util.ArrayList;
 
 /**
  * Manage your accounts!
+ *
+ * @author Antoine
+ * @version 1.0
  */
 public class AccountManager {
 

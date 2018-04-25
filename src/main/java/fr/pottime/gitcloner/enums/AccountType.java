@@ -2,6 +2,9 @@ package fr.pottime.gitcloner.enums;
 
 /**
  * They are all account type
+ *
+ * @author Antoine
+ * @version 1.0
  */
 public enum AccountType {
 

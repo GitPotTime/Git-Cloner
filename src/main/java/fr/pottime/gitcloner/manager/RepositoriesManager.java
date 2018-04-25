@@ -2,7 +2,7 @@ package fr.pottime.gitcloner.manager;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import fr.pottime.gitcloner.GitCloner;
+import fr.pottime.gitcloner.GitClonerMain;
 import fr.pottime.gitcloner.GitUtils;
 import fr.pottime.gitcloner.account.Account;
 import fr.pottime.gitcloner.enums.ExitStatus;
@@ -21,6 +21,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Manage your repositories!
+ *
+ * @author Antoine
+ * @version 1.0
  */
 public class RepositoriesManager {
 
@@ -65,11 +68,11 @@ public class RepositoriesManager {
             conn.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(20));
             conn.setReadTimeout((int) TimeUnit.SECONDS.toMillis(30));
             conn.setDoOutput(true);
-            conn.setRequestProperty("User-Agent", "GitCloner/" + GitCloner.VERSION);
+            conn.setRequestProperty("User-Agent", "GitClonerMain/" + GitClonerMain.VERSION);
         } catch (IOException e) {
-            GitCloner.logger.severe("** OPEN AN ISSUES ON GTIHUB **");
-            GitCloner.logger.severe("Can't open the connection for the url " + url);
-            GitCloner.logger.severe("Error are here:");
+            GitClonerMain.logger.severe("** OPEN AN ISSUES ON GTIHUB **");
+            GitClonerMain.logger.severe("Can't open the connection for the url " + url);
+            GitClonerMain.logger.severe("Error are here:");
             e.printStackTrace();
             Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
             return repos;
@@ -78,9 +81,9 @@ public class RepositoriesManager {
         try {
             reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         } catch (IOException e) {
-            GitCloner.logger.severe("** OPEN AN ISSUES ON GITHUB **");
-            GitCloner.logger.severe("Can't open the stream for the url " + url);
-            GitCloner.logger.severe("Error are here:");
+            GitClonerMain.logger.severe("** OPEN AN ISSUES ON GITHUB **");
+            GitClonerMain.logger.severe("Can't open the stream for the url " + url);
+            GitClonerMain.logger.severe("Error are here:");
             e.printStackTrace();
             Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
             return repos;

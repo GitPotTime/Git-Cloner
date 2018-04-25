@@ -7,6 +7,9 @@ import java.util.Collection;
 
 /**
  * Github account
+ *
+ * @author Antoine
+ * @version 1.0
  */
 public interface Account {
 

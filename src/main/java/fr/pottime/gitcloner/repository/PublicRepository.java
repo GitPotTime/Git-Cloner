@@ -5,6 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * An public repository
+ *
+ * @author Antoine
+ * @version 1.0
+ */
 @AllArgsConstructor
 @Getter
 @Setter
