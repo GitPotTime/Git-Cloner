@@ -5,6 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * An private repository
+ *
+ * @author Antoine
+ * @version 1.1
+ */
 @AllArgsConstructor
 @Getter
 @Setter
@@ -17,7 +23,7 @@ public class PrivateRepository implements Repository {
 
     @Override
     public boolean isPublicRepository() {
-        return true;
+        return false;
     }
 
 }
