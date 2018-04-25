@@ -4,113 +4,138 @@ import fr.pottime.gitcloner.account.Account;
 import fr.pottime.gitcloner.enums.AccountType;
 import fr.pottime.gitcloner.enums.ExitStatus;
 import fr.pottime.gitcloner.manager.AccountManager;
-import fr.pottime.gitcloner.manager.RepositoriesManager;
 import fr.pottime.gitcloner.repository.Repository;
+import lombok.Getter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.logging.Logger;
+import java.util.Collection;
 
 /**
- * Clone all repositories from an Github user or an Github organisation!
+ * Clone all repositories created by an Github user or an Github organisation!
  *
  * @author Antoine
- * @version 1.1
+ * @version 1.0
  */
+@Getter
 public class GitCloner {
 
-    /**
-     * The version of GitCloner
-     */
-    public static final String VERSION = "1.0.0";
+    private Account account;
 
     /**
-     * The logger used to print information and errors.
+     * Don't use this constructor.
+     *
+     * @see GitCloner#GitCloner(Account) Use this constructor!
+     * @see GitCloner#GitCloner(String, AccountType) Or this one!
+     * @deprecated Some values can't be used.
      */
-    public static final Logger logger;
-
-    /**
-     * The type of account choose by the user.
-     */
-    private static AccountType accountType;
-
-    static {
-        logger = Logger.getLogger(GitCloner.class.getName());
+    @Deprecated
+    private GitCloner() {
+        throw new IllegalStateException("You can't use this constructor!");
     }
 
     /**
-     * Entry point
+     * Create an instance of GitCloner with the
+     * account {@code account}
      *
-     * @param args Command line arguments
+     * @param account The account
      */
-    public static void main(String[] args) {
-        System.setProperty("https.protocols", "TLSv1.2");
-        if (args.length < 2) {
-            // The user must put more arguments
-            logger.warning("** DO NOT OPEN AN ISSUES ON GITHUB **");
-            logger.warning("You must put more arguments!");
-            logger.warning("Read USAGE.MD if you need help.");
-            Runtime.getRuntime().exit(ExitStatus.ARGS_REQUIRED.getStatus());
-            return;
-        }
+    public GitCloner(Account account) {
+        this.account = account;
+    }
 
-        // Set the account type
-        switch (args[0]) {
-            case "user":
-                GitCloner.accountType = AccountType.USER;
-                break;
-            case "org":
-                GitCloner.accountType = AccountType.ORG;
-                break;
-            default:
-                GitCloner.accountType = AccountType.OTHER;
-                break;
-        }
-        if (GitCloner.accountType == AccountType.OTHER) GitCloner.badType(args[0]);
+    /**
+     * Create an instance of GitCloner and
+     * Create an account with the name {@code name} and
+     * the type of the account will be {@code accountType}
+     *
+     * @param name        The name of the account
+     * @param accountType The type of the account
+     */
+    public GitCloner(String name, AccountType accountType) {
+        this(AccountManager.createAccount(name, accountType));
+    }
 
-        Account account = AccountManager.createAccount(args[1], GitCloner.accountType);
-        for (Repository repo : RepositoriesManager.getRepositories(account)) {
-            if (!repo.getOwner().getUsername().equals(account.getUsername())) continue;
-            account.addRepository(repo);
+    /**
+     * Clone all repositories for the account {@link #account}
+     * GitCloner use the https-url to clone the repositories.
+     *
+     * @return {@code true} if the no error occurred and all repositories
+     * are been cloned! Else, if an error occurred or an repositories aren't
+     * cloned. Return {@code false}
+     * @see Account#getRepositories() Clone all repositories from here.
+     */
+    public boolean start() {
+        if (!this.isAccountExists()) {
+            GitClonerMain.logger.severe("** DO NOT OPEN AN ISSUES ON GITHUB **");
+            GitClonerMain.logger.severe("The account " + account.getUsername() + " doesn't exists on Github.");
+            return false;
         }
-
-        // Clone repositories
-        GitCloner.logger.info("Cloning " + account.getUsername() + " repositories..");
+        GitClonerMain.logger.info("Cloning " + account.getUsername() + " repositories..");
         for (Repository repo : account.getRepositories()) {
             String command = "git clone " + repo.getHttpsUrl();
             try {
-                GitCloner.logger.info("Cloning the repo " + repo.getName() + " with the command " + command);
+                GitClonerMain.logger.info("Cloning the repo " + repo.getName() + " with the command " + command);
                 Process process = GitUtils.runCommand(command);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 String line;
                 while ((line = reader.readLine()) != null) System.out.println(line);
-                GitCloner.logger.info("The repo " + repo.getName() + " are been cloned!");
+                GitClonerMain.logger.info("The repo " + repo.getName() + " are been cloned!");
             } catch (IOException e) {
-                GitCloner.logger.severe("** OPEN AN ISSUES ON GITHUB **");
-                GitCloner.logger.severe("Can't run the command " + command);
-                GitCloner.logger.severe("Error are here:");
+                GitClonerMain.logger.severe("** OPEN AN ISSUES ON GITHUB **");
+                GitClonerMain.logger.severe("Can't run the command " + command);
+                GitClonerMain.logger.severe("Error are here:");
                 e.printStackTrace();
                 Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
-                return;
+                return false;
             }
         }
-        GitCloner.logger.info("All user repositories are been cloned!");
-        Runtime.getRuntime().exit(ExitStatus.SUCCESS.getStatus());
+        GitClonerMain.logger.info("All user repositories are been cloned!");
+        return true;
     }
 
     /**
-     * Print to the console an message for
-     * the user and exit GitCloner.
+     * Get who many the account {@link #account} created repositories.
      *
-     * @param typeEntered The type entered by the user.
+     * @return The number of repositories created
      */
-    private static void badType(String typeEntered) {
-        logger.severe("** DO NOT OPEN AN ISSUES ON GITHUB **");
-        logger.severe("The type " + typeEntered + " is not correct");
-        logger.severe("You can use only 2 type.");
-        logger.severe("User for clone all repos of an user");
-        logger.severe("And org for clone all repos of an organisation.");
-        Runtime.getRuntime().exit(ExitStatus.BAD_ARGUMENT.getStatus());
+    public int getRepositoriesSize() {
+        return account.getRepositories().size();
     }
+
+    /**
+     * Get the repositories created by
+     * the account {@link #account}
+     *
+     * @return All repositories created by
+     * the account {@link #account}
+     */
+    public Collection<Repository> getRepositories() {
+        return account.getRepositories();
+    }
+
+    /**
+     * Get the type of account for the
+     * account {@link #account}
+     *
+     * @return The type of account for the
+     * account {@link #account}
+     */
+    public AccountType getAccountType() {
+        return account.getAccountType();
+    }
+
+    /**
+     * Get if the account {@link #account} exists
+     * in Github
+     *
+     * @return {@code true} if the account
+     * {@link #account} exists in github
+     * else, return {@code false}
+     */
+    public boolean isAccountExists() {
+        return account.isExists();
+    }
+
 }
