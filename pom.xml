@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>fr.pottime</groupId>
     <artifactId>gitcloner</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 
     <name>GitCloner</name>
     <description>Clone all public repository from an github organisation or an github user</description>
