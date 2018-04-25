@@ -2,6 +2,9 @@ package fr.pottime.gitcloner.enums;
 
 /**
  * All possible exit are listed here.
+ *
+ * @author Antoine
+ * @version 1.0.2
  */
 public enum ExitStatus {
 
@@ -63,9 +66,11 @@ public enum ExitStatus {
     }
 
     /**
-     * Check if GitClonerMain exit with an error
+     * Check if GitCloner exit with an error
      *
-     * @return {@code true} if GitClonerMain
+     * @return {@code true} if GitCloner exit with
+     * an error or return {@code false} if GitCloner
+     * without errors.
      */
     public boolean isError() {
         return status != 0;
