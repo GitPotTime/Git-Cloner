@@ -34,9 +34,19 @@ public enum ExitStatus {
     ACCOUNT_DONT_EXISTS(4),
 
     /**
+     * GitCloner need to be updated.
+     */
+    GITCLONER_NOT_UP_TO_DATE(5),
+
+    /**
+     * An folder must be deleted
+     */
+    FOLDER_MUST_BE_DELETED(6),
+
+    /**
      * An error occurred..
      */
-    ERROR(5);
+    ERROR(7);
 
 
     /**
