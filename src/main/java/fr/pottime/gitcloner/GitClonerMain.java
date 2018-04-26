@@ -7,34 +7,23 @@ import fr.pottime.gitcloner.manager.AccountManager;
 import fr.pottime.gitcloner.manager.RepositoriesManager;
 import fr.pottime.gitcloner.repository.Repository;
 
-import java.util.logging.Logger;
-
 /**
  * Clone all repositories from an Github user or an Github organisation!
  *
  * @author Antoine
- * @version 1.2
+ * @version 1.3
  */
 public class GitClonerMain {
 
     /**
      * The version of GitCloner
      */
-    public static final String VERSION = "1.1.0";
-
-    /**
-     * The logger used to print information and errors.
-     */
-    public static final Logger logger;
+    public static final String VERSION = "1.1.5";
 
     /**
      * The type of account choose by the user.
      */
     private static AccountType accountType;
-
-    static {
-        logger = Logger.getLogger(GitCloner.class.getName());
-    }
 
     /**
      * Entry point
@@ -45,9 +34,9 @@ public class GitClonerMain {
         System.setProperty("https.protocols", "TLSv1.2");
         if (args.length < 2) {
             // The user must put more arguments
-            logger.warning("** DO NOT OPEN AN ISSUES ON GITHUB **");
-            logger.warning("You must put more arguments!");
-            logger.warning("Read USAGE.MD if you need help.");
+            GitCloner.logger.warning("** DO NOT OPEN AN ISSUES ON GITHUB **\n" +
+                    "You must put more arguments!\n" +
+                    "Read USAGE.MD if you need help.");
             Runtime.getRuntime().exit(ExitStatus.ARGS_REQUIRED.getStatus());
             return;
         }
@@ -85,11 +74,11 @@ public class GitClonerMain {
      * @param typeEntered The type entered by the user.
      */
     private static void badType(String typeEntered) {
-        logger.severe("** DO NOT OPEN AN ISSUES ON GITHUB **");
-        logger.severe("The type " + typeEntered + " is not correct");
-        logger.severe("You can use only 2 type.");
-        logger.severe("User for clone all repos of an user");
-        logger.severe("And org for clone all repos of an organisation.");
+        GitCloner.logger.severe("** DO NOT OPEN AN ISSUES ON GITHUB **\n" +
+                "The type " + typeEntered + " is not correct\n" +
+                "You can use only 2 type." +
+                "User for clone all repos of an user\n" +
+                "And org for clone all repos of an organisation.\n");
         Runtime.getRuntime().exit(ExitStatus.BAD_ARGUMENT.getStatus());
     }
 }

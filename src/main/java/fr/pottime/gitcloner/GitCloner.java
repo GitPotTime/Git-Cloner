@@ -8,9 +8,11 @@ import fr.pottime.gitcloner.repository.Repository;
 import lombok.Getter;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collection;
+import java.util.logging.Logger;
 
 /**
  * Clone all repositories created by an Github user or an Github organisation!
@@ -21,7 +23,15 @@ import java.util.Collection;
 @Getter
 public class GitCloner {
 
+    /**
+     * The logger used to print information and errors.
+     */
+    public static final Logger logger;
     private Account account;
+
+    static {
+        logger = Logger.getLogger(GitCloner.class.getName());
+    }
 
     /**
      * Don't use this constructor.
@@ -58,7 +68,7 @@ public class GitCloner {
     }
 
     /**
-     * Clone all repositories for the account {@link #account}
+     * Clone all repositories for the account {@link #account}.
      * GitCloner use the https-url to clone the repositories.
      *
      * @return {@code true} if the no error occurred and all repositories
@@ -68,30 +78,44 @@ public class GitCloner {
      */
     public boolean start() {
         if (!this.isAccountExists()) {
-            GitClonerMain.logger.severe("** DO NOT OPEN AN ISSUES ON GITHUB **");
-            GitClonerMain.logger.severe("The account " + account.getUsername() + " doesn't exists on Github.");
+            logger.severe("** DO NOT OPEN AN ISSUES ON GITHUB **");
+            logger.severe("The account " + account.getUsername() + " doesn't exists on Github.");
             return false;
         }
-        GitClonerMain.logger.info("Cloning " + account.getUsername() + " repositories..");
+        logger.info("Cloning " + account.getUsername() + " repositories..");
+        File accountFile = new File(account.getUsername());
+        if (!accountFile.mkdir()) {
+            logger.warning("** DO NOT OPEN AN ISSUES ON GITHUB **\n" +
+                    "Please, delete the folder " + this.account.getUsername() + " after, retry.");
+            Runtime.getRuntime().exit(ExitStatus.FOLDER_MUST_BE_DELETED.getStatus());
+            return false;
+        }
         for (Repository repo : account.getRepositories()) {
-            String command = "git clone " + repo.getHttpsUrl();
+            String goToOwnerFileCommand = "cd " + accountFile.getPath();
+            String cloneCommand = "git clone " + repo.getHttpsUrl();
+            StringBuilder cmdBuilder = new StringBuilder();
+            cmdBuilder.append(goToOwnerFileCommand).append(" && ").append(cloneCommand);
             try {
-                GitClonerMain.logger.info("Cloning the repo " + repo.getName() + " with the command " + command);
-                Process process = GitUtils.runCommand(command);
+                logger.info("Cloning the repo " + repo.getName() + " with the command " + cloneCommand);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ignored) {
+                }
+                Process process = GitUtils.runCommand(cmdBuilder.toString());
                 BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 String line;
                 while ((line = reader.readLine()) != null) System.out.println(line);
-                GitClonerMain.logger.info("The repo " + repo.getName() + " are been cloned!");
+                logger.info("The repo " + repo.getName() + " are been cloned!");
             } catch (IOException e) {
-                GitClonerMain.logger.severe("** OPEN AN ISSUES ON GITHUB **");
-                GitClonerMain.logger.severe("Can't run the command " + command);
-                GitClonerMain.logger.severe("Error are here:");
+                logger.severe("** OPEN AN ISSUES ON GITHUB **\n" +
+                        "Can't run the command: " + cmdBuilder.toString() + "\n" +
+                        "Error are here:");
                 e.printStackTrace();
                 Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
                 return false;
             }
         }
-        GitClonerMain.logger.info("All user repositories are been cloned!");
+        logger.info("All user repositories are been cloned!");
         return true;
     }
 

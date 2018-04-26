@@ -2,6 +2,7 @@ package fr.pottime.gitcloner.manager;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import fr.pottime.gitcloner.GitCloner;
 import fr.pottime.gitcloner.GitClonerMain;
 import fr.pottime.gitcloner.GitUtils;
 import fr.pottime.gitcloner.account.Account;
@@ -70,9 +71,9 @@ public class RepositoriesManager {
             conn.setDoOutput(true);
             conn.setRequestProperty("User-Agent", "GitCloner/" + GitClonerMain.VERSION);
         } catch (IOException e) {
-            GitClonerMain.logger.severe("** OPEN AN ISSUES ON GTIHUB **");
-            GitClonerMain.logger.severe("Can't open the connection for the url " + url);
-            GitClonerMain.logger.severe("Error are here:");
+            GitCloner.logger.severe("** OPEN AN ISSUES ON GTIHUB **");
+            GitCloner.logger.severe("Can't open the connection for the url " + url);
+            GitCloner.logger.severe("Error are here:");
             e.printStackTrace();
             Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
             return repos;
@@ -81,9 +82,9 @@ public class RepositoriesManager {
         try {
             reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         } catch (IOException e) {
-            GitClonerMain.logger.severe("** OPEN AN ISSUES ON GITHUB **");
-            GitClonerMain.logger.severe("Can't open the stream for the url " + url);
-            GitClonerMain.logger.severe("Error are here:");
+            GitCloner.logger.severe("** OPEN AN ISSUES ON GITHUB **");
+            GitCloner.logger.severe("Can't open the stream for the url " + url);
+            GitCloner.logger.severe("Error are here:");
             e.printStackTrace();
             Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
             return repos;
