@@ -13,10 +13,15 @@ cloner.start();
 ```
 And for an organisation:
 ```
-GitCloner cloner = new GitCloner("THE_NAME", AccountType.ORG);
+GitCloner cloner = new GitCloner("Prylox", AccountType.ORG);
 // Start the cloner
 cloner.start();
 ```
-Note: GitCloner need Java 7 or newer to work.
 ## Dependencies
 Git-Cloner have some dependencies like projectlombok v1.16.20 and gson v2.8.2
+
+## Java version
+GitCloner need Java 7 or newer to work
+
+## What do I need to do
+Read TODO.MD
