@@ -1,6 +1,7 @@
 package fr.pottime.gitcloner;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import fr.pottime.gitcloner.account.Account;
@@ -8,14 +9,14 @@ import fr.pottime.gitcloner.enums.AccountType;
 import fr.pottime.gitcloner.enums.ExitStatus;
 import fr.pottime.gitcloner.repository.Repository;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.net.URLConnection;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -41,9 +42,9 @@ public class GitUtils {
             return sb.toString();
         } catch (IOException e) {
             if (line == null) return sb.toString();
-            GitClonerMain.logger.severe("** OPEN AN ISSUES ON GITHUB **");
-            GitClonerMain.logger.severe("An error occurred while reading the content of an file or an website.");
-            GitClonerMain.logger.severe("Errors are here:");
+            GitCloner.logger.severe("** OPEN AN ISSUES ON GITHUB **");
+            GitCloner.logger.severe("An error occurred while reading the content of an file or an website.");
+            GitCloner.logger.severe("Errors are here:");
             e.printStackTrace();
             Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
             return sb.toString();
@@ -55,21 +56,44 @@ public class GitUtils {
      *
      * @param str The string to parse
      * @return The string {@code str} parsed or an
-     * empty JSONObject if an error occurred.
+     * empty JSONArray if an error occurred.
      */
     public static JsonArray parseJsonString(String str) {
         JsonParser parser = new JsonParser();
         try {
             return (JsonArray) parser.parse(str);
         } catch (JsonSyntaxException e) {
-            GitClonerMain.logger.severe("** OPEN AN ISSUES ON GITHUB **");
-            GitClonerMain.logger.severe("Can't parse the string " + str);
-            GitClonerMain.logger.severe("Errors are here:");
+            GitCloner.logger.severe("** OPEN AN ISSUES ON GITHUB **\n" +
+                    "Can't parse the string " + str + "\n" +
+                    "Errors are here:");
             e.printStackTrace();
             Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
             return new JsonArray();
         } catch (ClassCastException ignored) {
             return new JsonArray();
+        }
+    }
+
+    /**
+     * Parse the string {@code str}
+     *
+     * @param str The string to parse
+     * @return The string {@code str} parsed or an
+     * empty JSONObject if an error occurred.
+     */
+    public static JsonObject parseJsonStr(String str) {
+        JsonParser parser = new JsonParser();
+        try {
+            return (JsonObject) parser.parse(str);
+        } catch (JsonSyntaxException e) {
+            GitCloner.logger.severe("** OPEN AN ISSUES ON GITHUB **\n" +
+                    "Can't parse the string " + str + "\n" +
+                    "Errors are here:");
+            e.printStackTrace();
+            Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
+            return new JsonObject();
+        } catch (ClassCastException ignored) {
+            return new JsonObject();
         }
     }
 
@@ -83,9 +107,9 @@ public class GitUtils {
         try {
             return new URL(url);
         } catch (MalformedURLException e) {
-            GitClonerMain.logger.severe("** OPEN AN ISSUES ON GITHUB **");
-            GitClonerMain.logger.severe("The url " + url + " is malformed.");
-            GitClonerMain.logger.severe("Please open an issues with these errors:");
+            GitCloner.logger.severe("** OPEN AN ISSUES ON GITHUB **");
+            GitCloner.logger.severe("The url " + url + " is malformed.");
+            GitCloner.logger.severe("Please open an issues with these errors:");
             e.printStackTrace();
             Runtime.getRuntime().exit(ExitStatus.MALFORMED_URL.getStatus());
             return null;
@@ -113,20 +137,79 @@ public class GitUtils {
     public static boolean isAccountExists(String username, AccountType accountType) {
         URL url = GitUtils.toURL("https://api.github.com/" +
                 accountType.getType() + "/" + username);
+
+        HttpsURLConnection conn = null;
         try {
-            URLConnection conn = url.openConnection();
-            conn.setConnectTimeout((int) TimeUnit.MILLISECONDS.toSeconds(20000));
-            conn.setReadTimeout((int) TimeUnit.MILLISECONDS.toSeconds(30000));
+            //noinspection ConstantConditions
+            conn = (HttpsURLConnection) url.openConnection();
+            conn.setConnectTimeout(20000);
+            conn.setReadTimeout(30000);
             conn.setDoOutput(true);
             conn.addRequestProperty("User-Agent", "GitCloner-" + GitClonerMain.VERSION);
-
+            if (!(conn.getResponseCode() == HttpsURLConnection.HTTP_OK)) {
+                GitCloner.logger.warning("The response of the url " + url + " with the\n" +
+                        "User-Agent: " + conn.getRequestProperty("User-Agent") + "\n" +
+                        "is " + conn.getResponseCode());
+            } else GitCloner.logger.fine("The response of the url " + url + " is 200 (HTTP_OK)");
             BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String content = GitUtils.readContent(reader);
-            return GitUtils.parseJsonString(content).size() > 0;
+            JsonObject obj = GitUtils.parseJsonStr(content);
+            return !(obj.has("message") && obj.get("message").getAsString().equals("Not Found"));
         } catch (IOException e) {
-            GitClonerMain.logger.severe("** READ THE MESSAGE FOR SEE IF YOU NEED TO OPEN AN ISSUES **");
-            GitClonerMain.logger.severe("Try to connect to the url " + url.getHost() + " and if you can't. It's because the website is closed else");
-            GitClonerMain.logger.severe("open an issues on github with they errors:");
+            if (e instanceof SocketTimeoutException) {
+                SocketTimeoutException e1 = (SocketTimeoutException) e;
+                if (e1.getMessage().contains("Read") && e1.getMessage().contains("timed out")) {
+                    // Read time out
+                    try {
+                        assert conn != null;
+                        int responseCode = conn.getResponseCode();
+                        if (responseCode != HttpsURLConnection.HTTP_OK) {
+                            // Response code aren't ok
+                            if (responseCode == HttpsURLConnection.HTTP_FORBIDDEN) {
+                                // Access forbidden.
+                                GitCloner.logger.info("** DO NOT OPEN AN ISSUES ON GITHUB **\n" +
+                                        "The url " + url + " is forbidden. Github probably make an update.");
+                                return false;
+                            } else if (responseCode == HttpsURLConnection.HTTP_NOT_FOUND) {
+                                // Can't find github api url
+                                GitCloner.logger.info("** READ THE MESSAGE TO SEE IF YOU NEED TO OPEN AN ISSUES **\n" +
+                                        "Check if you have the latest version.\n" +
+                                        "If you have the latest version, please OPEN AN ISSUES ON GITHUB\n" +
+                                        "else, update the version of GitCloner.");
+                                Runtime.getRuntime().exit(ExitStatus.GITCLONER_NOT_UP_TO_DATE.getStatus());
+                                return false;
+                            } else {
+                                // An unknown error occurred
+                                GitCloner.logger.severe("** OPEN AN ISSUES ON GITHUB **\n" +
+                                        "An error occurred. Sorry, please open an issues on github with these errors:");
+                                e1.printStackTrace();
+                                Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
+                                return false;
+                            }
+                        } else {
+                            // Response code are ok.
+                            GitCloner.logger.severe("** OPEN AN ISSUES ON GITHUB **\n" +
+                                    "The response code is " + conn.getResponseCode() + "\n" +
+                                    "but GitCloner can't read the content (read time out)\n" +
+                                    "errors are here:");
+                            e1.printStackTrace();
+                            Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
+                            return false;
+                        }
+                    } catch (IOException e2) {
+                        GitCloner.logger.severe("** READ THE MESSAGE FOR SEE IF YOU NEED TO OPEN ISSUES **\n" +
+                                "Try to connect to the url " + url + " and if you can't. It's because the website is closed and no error are occurred. Else\n" +
+                                "open an issues on github with they errors:");
+                        e.printStackTrace();
+                        Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
+                        return false;
+                    }
+                }
+                return false;
+            }
+            GitCloner.logger.severe("** READ THE MESSAGE FOR SEE IF YOU NEED TO OPEN AN ISSUES **");
+            GitCloner.logger.severe("Try to connect to the url " + url + " and if you can't. It's because the website is closed else");
+            GitCloner.logger.severe("open an issues on github with they errors:");
             e.printStackTrace();
             Runtime.getRuntime().exit(ExitStatus.ERROR.getStatus());
             return false;
@@ -151,15 +234,15 @@ public class GitUtils {
      * @param printer The printer
      */
     public static void listRepositories(Account account, Logger printer) {
-        GitClonerMain.logger.info("The user " + account.getUsername() + " have " + account.getRepositories().size() + " repositories");
-        GitClonerMain.logger.info("They repositories are here:");
+        GitCloner.logger.info("The user " + account.getUsername() + " have " + account.getRepositories().size() + " repositories");
+        GitCloner.logger.info("They repositories are here:");
         for (Repository repo : account.getRepositories()) {
             printer.fine(repo.getName() + ":");
             printer.fine("httpsUrl= " + repo.getHttpsUrl());
             printer.fine("sshUrl= " + repo.getSshUrl());
             printer.fine("public: " + (repo.isPublicRepository() ? "Yes" : "No"));
         }
-        GitClonerMain.logger.info("All repositories by " + account.getUsername() + " are listed!");
+        GitCloner.logger.info("All repositories by " + account.getUsername() + " are listed!");
     }
 
     /**
@@ -173,5 +256,17 @@ public class GitUtils {
         ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", command);
         builder.redirectErrorStream(true);
         return builder.start();
+    }
+
+    /**
+     * Get the absolute path of the GitCloner Jar
+     *
+     * @return The absolute path of the GitCloner jar
+     */
+    public static String getAbsolutePath() {
+        String absolutePath = GitUtils.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        absolutePath = absolutePath.substring(0, absolutePath.lastIndexOf("/"));
+        absolutePath = absolutePath.replaceAll("%20", " "); // Surely need to do this here
+        return absolutePath;
     }
 }
